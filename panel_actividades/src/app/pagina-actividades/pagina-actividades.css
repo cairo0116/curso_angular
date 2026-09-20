@@ -1,0 +1,19 @@
+.tablero { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.metricas,
+.metricas { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.75rem; }
+.metricas li { border: 1px solid #d4d4d4; border-radius: 0.5rem; padding: 0.75rem; text-align: center; }
+.metricas strong { display: block; font-size: 1.75rem; }
+
+.controles { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+.campo { display: flex; flex-direction: column; gap: 0.25rem; }
+.campo input,
+.campo select { padding: 0.4rem; }
+
+
+.tarjeta,
+.metricas li,
+.campo { min-width: 0; }
+
+
+

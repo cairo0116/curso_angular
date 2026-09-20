@@ -1,13 +1,18 @@
-
-import { Component, computed, effect, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { Actividad, EstadoActividad, FiltroEstado, FiltroPrioridad, Prioridad } from '../modelos/actividad';
+import { ResumenActividades } from '../actividades/resumen-actividades/resumen-actividades';
+import { ListaActividades } from '../actividades/lista-actividades/lista-actividades';
+import { PanelSeccion } from '../compartido/panel/panel-seccion';
+import { FiltrosActividades } from '../actividades/filtros-actividades/filtros-actividades';
 
 @Component({
-  selector: 'app-tablero-prioridades',
-  templateUrl: './tablero-prioridades.html',
-  styleUrl: './tablero-prioridades.css',
+  selector: 'app-pagina-actividades',
+  standalone: true,
+  imports: [ResumenActividades, FiltrosActividades, ListaActividades, PanelSeccion],
+  templateUrl: './pagina-actividades.html',
+  styleUrl: './pagina-actividades.css',
 })
-export class TableroPrioridades {
+export class PaginaActividades {
   protected readonly actividades = signal<Actividad[]>([
     {
       id: 1,
@@ -52,7 +57,6 @@ export class TableroPrioridades {
   ]);
 
   private readonly orden: Record<Prioridad, number> = { alta: 0, media: 1, baja: 2 };
-
   protected readonly termino = signal('');
   protected readonly filtroEstado = signal<FiltroEstado>('todas');
   protected readonly filtroPrioridad = signal<FiltroPrioridad>('todas');
@@ -99,14 +103,6 @@ export class TableroPrioridades {
     () => this.actividades().find((a) => a.id === this.seleccionadaId()) ?? null,
   );
 
-  constructor() {
-    effect(() => {
-      console.info(`[Tablero] ${this.mostradas()} de ${this.total()} visibles`);
-    });
-  }
-
-  
-
   protected alternarDestacada(id: number): void {
     this.actividades.update((actuales) =>
       actuales.map((a) => (a.id === id ? { ...a, destacada: !a.destacada } : a)),
@@ -121,23 +117,6 @@ export class TableroPrioridades {
 
   protected eliminar(id: number): void {
     this.actividades.update((actuales) => actuales.filter((a) => a.id !== id));
-  }
-
-  protected buscar(event: Event): void {
-    const input = event.target as HTMLInputElement | null;
-    this.termino.set(input?.value ?? '');
-  }
-
-  protected cambiarFiltroEstado(event: Event): void {
-    const select = event.target as HTMLSelectElement | null;
-    const value = select?.value as FiltroEstado | undefined;
-    this.filtroEstado.set(value ?? 'todas');
-  }
-
-  protected cambiarFiltroPrioridad(event: Event): void {
-    const select = event.target as HTMLSelectElement | null;
-    const value = select?.value as FiltroPrioridad | undefined;
-    this.filtroPrioridad.set(value ?? 'todas');
   }
 
   protected seleccionar(id: number): void {
@@ -161,5 +140,8 @@ export class TableroPrioridades {
     if (estado === 'en_progreso') return 'completada';
     return 'completada';
   }
+  
 }
+
+
 
