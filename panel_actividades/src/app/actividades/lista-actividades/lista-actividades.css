@@ -25,3 +25,5 @@
   font-size: .85rem;
   font-weight: 600;
 }
+
+.enlace-detalle { font-size: 0.85rem; display: inline-block; margin-top: 0.25rem; }

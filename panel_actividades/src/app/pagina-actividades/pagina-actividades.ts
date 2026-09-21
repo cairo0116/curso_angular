@@ -1,4 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ActividadesService } from '../actividades/actividades/actividades';
 import { Actividad, EstadoActividad, FiltroEstado, FiltroPrioridad, Prioridad } from '../modelos/actividad';
 import { ResumenActividades } from '../actividades/resumen-actividades/resumen-actividades';
@@ -17,15 +18,21 @@ import { FiltrosActividades } from '../actividades/filtros-actividades/filtros-a
 })
 export class PaginaActividades {
   private readonly servicio = inject(ActividadesService);
+  private readonly router = inject(Router);
+  private readonly ruta = inject(ActivatedRoute);
 
   protected readonly actividades = this.servicio.actividades;
   protected readonly aviso = this.servicio.aviso;
   protected readonly sinGuardar = this.servicio.sinGuardar;
 
   private readonly orden: Record<Prioridad, number> = { alta: 0, media: 1, baja: 2 };
-  protected readonly termino = signal('');
-  protected readonly filtroEstado = signal<FiltroEstado>('todas');
-  protected readonly filtroPrioridad = signal<FiltroPrioridad>('todas');
+  readonly buscar = input<string | undefined>('');
+  readonly estado = input<FiltroEstado | undefined>('todas');
+  readonly prioridad = input<FiltroPrioridad | undefined>('todas');
+
+  protected readonly termino = computed(() => this.buscar() ?? '');
+  protected readonly filtroEstado = computed(() => this.estado() ?? 'todas');
+  protected readonly filtroPrioridad = computed(() => this.prioridad() ?? 'todas');
   protected readonly seleccionadaId = signal<number | null>(null);
 
   protected readonly visibles = computed(() => {
@@ -78,16 +85,38 @@ export class PaginaActividades {
     this.seleccionadaId.update((actual) => (actual === id ? null : id));
   }
 
+  protected cambiarBuscar(valor: string): void {
+    this.actualizarFiltros({ buscar: valor || null });
+  }
+
+  protected cambiarEstado(valor: FiltroEstado): void {
+    this.actualizarFiltros({ estado: valor === 'todas' ? null : valor });
+  }
+
+  protected cambiarPrioridad(valor: FiltroPrioridad): void {
+    this.actualizarFiltros({ prioridad: valor === 'todas' ? null : valor });
+  }
+
   protected limpiarFiltros(): void {
-    this.termino.set('');
-    this.filtroEstado.set('todas');
-    this.filtroPrioridad.set('todas');
+    this.actualizarFiltros({ buscar: null, estado: null, prioridad: null });
   }
 
   protected restablecer(): void {
     this.servicio.vaciar();
     this.limpiarFiltros();
     this.seleccionadaId.set(null);
+  }
+
+  private actualizarFiltros(queryParams: {
+    buscar?: string | null;
+    estado?: FiltroEstado | null;
+    prioridad?: FiltroPrioridad | null;
+  }): void {
+    void this.router.navigate([], {
+      relativeTo: this.ruta,
+      queryParams,
+      queryParamsHandling: 'merge',
+    });
   }
   
 }
