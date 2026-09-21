@@ -10,6 +10,7 @@
 .campo input,
 .campo select { padding: 0.4rem; }
 
+.aviso { margin: 0; border: 1px solid #949494; border-radius: 0.5rem; padding: 0.5rem 0.75rem; }
 
 .tarjeta,
 .metricas li,

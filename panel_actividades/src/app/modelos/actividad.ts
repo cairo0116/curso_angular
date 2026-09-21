@@ -19,3 +19,26 @@ export const ETIQUETAS: Record<EstadoActividad, string> = {
   en_progreso: 'En progreso',
   completada: 'Completada',
 };
+
+export function esColeccionActividades(valor: unknown): valor is Actividad[] {
+  return Array.isArray(valor) && valor.every((item) => {
+    if (typeof item !== 'object' || item === null) {
+      return false;
+    }
+
+    const actividad = item as Partial<Actividad>;
+
+    return (
+      typeof actividad.id === 'number' &&
+      typeof actividad.titulo === 'string' &&
+      typeof actividad.creadaEn === 'string' &&
+      typeof actividad.destacada === 'boolean' &&
+      (actividad.estado === 'pendiente' ||
+        actividad.estado === 'en_progreso' ||
+        actividad.estado === 'completada') &&
+      (actividad.prioridad === 'baja' ||
+        actividad.prioridad === 'media' ||
+        actividad.prioridad === 'alta')
+    );
+  });
+}
