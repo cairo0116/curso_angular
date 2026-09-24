@@ -1,30 +1,48 @@
 import { Routes } from '@angular/router';
 import { PaginaActividades } from './pagina-actividades/pagina-actividades';
-import { DetalleActividad } from './actividades/detalle-actividad/detalle-actividad';
+import { DetalleActividad } from './actividades/actividades/detalle-actividad/detalle-actividad';
 import { SeccionActividades } from './actividades/seccion-actividades/seccion-actividades';
 import { PaginaNoEncontrada } from './compartido/pagina-no-encontrada/pagina-no-encontrada';
+import { puedeSalir } from './actividades/puede-salir';
 
 export const routes: Routes = [
-	{ path: '', redirectTo: 'actividades', pathMatch: 'full' },
+  { path: '', redirectTo: 'actividades', pathMatch: 'full' },
 
-	{
-		path: 'actividades',
-		component: SeccionActividades,
-		children: [
-			{ path: '', component: PaginaActividades, title: 'Actividades' },
-			{ path: 'nueva', component: PaginaNoEncontrada, title: 'Nueva actividad' },
-			{ path: ':id', component: DetalleActividad, title: 'Detalle de la actividad' },
-		],
-	},
+  {
+    path: 'actividades',
+    component: SeccionActividades,
+    children: [
+      { path: '', component: PaginaActividades, title: 'Actividades' },
+      {
+        path: 'nueva',
+        title: 'Nueva actividad',
+        canDeactivate: [puedeSalir],
+        loadComponent: () =>
+          import('./actividades/formulario-actividad/formulario-actividad').then(
+            (m) => m.FormularioActividad,
+          ),
+      },
+      { path: ':id', component: DetalleActividad, title: 'Detalle de la actividad' },
+      {
+        path: ':id/editar',
+        title: 'Editar actividad',
+        canDeactivate: [puedeSalir],
+        loadComponent: () =>
+          import('./actividades/formulario-actividad/formulario-actividad').then(
+            (m) => m.FormularioActividad,
+          ),
+      },
+    ],
+  },
 
-	{
-		path: 'estadisticas',
-		title: 'Estadísticas',
-		loadComponent: () =>
-			import('./estadisticas/pagina-estadisticas/pagina-estadisticas').then(
-				(m) => m.PaginaEstadisticas,
-			),
-	},
+  {
+    path: 'estadisticas',
+    title: 'Estadísticas',
+    loadComponent: () =>
+      import('./estadisticas/pagina-estadisticas/pagina-estadisticas').then(
+        (m) => m.PaginaEstadisticas,
+      ),
+  },
 
-	{ path: '**', component: PaginaNoEncontrada, title: 'Página no encontrada' },
+  { path: '**', component: PaginaNoEncontrada, title: 'Página no encontrada' },
 ];
