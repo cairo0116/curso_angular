@@ -1,5 +1,8 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
+import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { debounceTime, of, switchMap } from 'rxjs';
+import { ActividadesApi } from '../actividades/api/actividades-api';
 import { ActividadesService } from '../actividades/actividades/actividades';
 import { Actividad, EstadoActividad, FiltroEstado, FiltroPrioridad, Prioridad } from '../modelos/actividad';
 import { ResumenActividades } from '../actividades/resumen-actividades/resumen-actividades';
@@ -7,23 +10,22 @@ import { ListaActividades } from '../actividades/lista-actividades/lista-activid
 import { PanelSeccion } from '../compartido/panel/panel-seccion';
 import { FiltrosActividades } from '../actividades/filtros-actividades/filtros-actividades';
 
-
 @Component({
   selector: 'app-pagina-actividades',
   standalone: true,
   imports: [ResumenActividades, FiltrosActividades, ListaActividades, PanelSeccion, RouterLink],
   templateUrl: './pagina-actividades.html',
   styleUrl: './pagina-actividades.css',
-  
 })
 export class PaginaActividades {
   private readonly servicio = inject(ActividadesService);
+  private readonly api = inject(ActividadesApi);
   private readonly router = inject(Router);
   private readonly ruta = inject(ActivatedRoute);
 
   protected readonly actividades = this.servicio.actividades;
-  protected readonly aviso = this.servicio.aviso;
-  protected readonly sinGuardar = this.servicio.sinGuardar;
+  protected readonly cargando = this.servicio.cargando;
+  protected readonly errorCarga = this.servicio.error;
 
   private readonly orden: Record<Prioridad, number> = { alta: 0, media: 1, baja: 2 };
   readonly buscar = input<string | undefined>('');
@@ -34,6 +36,17 @@ export class PaginaActividades {
   protected readonly filtroEstado = computed(() => this.estado() ?? 'todas');
   protected readonly filtroPrioridad = computed(() => this.prioridad() ?? 'todas');
   protected readonly seleccionadaId = signal<number | null>(null);
+  protected readonly resultados = signal<Actividad[] | null>(null);
+
+  constructor() {
+    toObservable(this.termino)
+      .pipe(
+        debounceTime(300),
+        switchMap((t) => (t.trim() === '' ? of(null) : this.api.buscar(t))),
+        takeUntilDestroyed(),
+      )
+      .subscribe((r) => this.resultados.set(r));
+  }
 
   protected readonly visibles = computed(() => {
     const termino = this.termino().trim().toLocaleLowerCase('es');
@@ -101,10 +114,8 @@ export class PaginaActividades {
     this.actualizarFiltros({ buscar: null, estado: null, prioridad: null });
   }
 
-  protected restablecer(): void {
-    this.servicio.vaciar();
-    this.limpiarFiltros();
-    this.seleccionadaId.set(null);
+  protected recargar(): void {
+    this.servicio.cargar();
   }
 
   private actualizarFiltros(queryParams: {
@@ -118,8 +129,6 @@ export class PaginaActividades {
       queryParamsHandling: 'merge',
     });
   }
-  
 }
-
 
 

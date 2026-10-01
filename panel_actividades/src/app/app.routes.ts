@@ -44,5 +44,14 @@ export const routes: Routes = [
       ),
   },
 
+  {
+    path: 'sugerencias',
+    title: 'Sugerencias',
+    loadComponent: () =>
+      import('./sugerencias/pagina-sugerencias/pagina-sugerencias').then(
+        (m) => m.PaginaSugerencias,
+      ),
+  },
+
   { path: '**', component: PaginaNoEncontrada, title: 'Página no encontrada' },
 ];

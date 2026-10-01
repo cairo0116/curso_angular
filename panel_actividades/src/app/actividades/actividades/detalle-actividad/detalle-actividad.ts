@@ -1,13 +1,11 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { ActividadesService } from '../actividades';
 
 @Component({
   selector: 'app-detalle-actividad',
   standalone: true,
-  imports: [RouterLink],
   templateUrl: './detalle-actividad.html',
-  styleUrls: ['./detalle-actividad.css'], 
+  styleUrls: ['./detalle-actividad.css'],
 })
 export class DetalleActividad {
   private readonly servicio = inject(ActividadesService);
