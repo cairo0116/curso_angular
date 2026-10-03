@@ -25,6 +25,9 @@
       [prioridad]="filtroPrioridad()"
       (prioridadChange)="cambiarPrioridad($event)" />
     <p aria-live="polite">{{ mostradas() }} de {{ total() }} actividades visibles</p>
+    @if (errorBusqueda()) {
+      <p role="alert">{{ errorBusqueda() }}</p>
+    }
   </app-panel-seccion>
 
   <app-panel-seccion titulo="Actividades">

@@ -1,9 +1,10 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { debounceTime, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, of, switchMap } from 'rxjs';
 import { ActividadesApi } from '../actividades/api/actividades-api';
 import { ActividadesService } from '../actividades/actividades/actividades';
+import { mensajeDe } from '../actividades/api/mensajes';
 import { Actividad, EstadoActividad, FiltroEstado, FiltroPrioridad, Prioridad } from '../modelos/actividad';
 import { ResumenActividades } from '../actividades/resumen-actividades/resumen-actividades';
 import { ListaActividades } from '../actividades/lista-actividades/lista-actividades';
@@ -37,12 +38,25 @@ export class PaginaActividades {
   protected readonly filtroPrioridad = computed(() => this.prioridad() ?? 'todas');
   protected readonly seleccionadaId = signal<number | null>(null);
   protected readonly resultados = signal<Actividad[] | null>(null);
+  protected readonly errorBusqueda = signal('');
 
   constructor() {
     toObservable(this.termino)
       .pipe(
         debounceTime(300),
-        switchMap((t) => (t.trim() === '' ? of(null) : this.api.buscar(t))),
+        switchMap((t) => {
+          this.resultados.set(null);
+          this.errorBusqueda.set('');
+
+          return t.trim() === ''
+            ? of(null)
+            : this.api.buscar(t).pipe(
+                catchError((error: unknown) => {
+                  this.errorBusqueda.set(mensajeDe(error));
+                  return of(null);
+                }),
+              );
+        }),
         takeUntilDestroyed(),
       )
       .subscribe((r) => this.resultados.set(r));
@@ -52,8 +66,9 @@ export class PaginaActividades {
     const termino = this.termino().trim().toLocaleLowerCase('es');
     const estado = this.filtroEstado();
     const prioridad = this.filtroPrioridad();
+    const base = termino === '' ? this.actividades() : (this.resultados() ?? this.actividades());
 
-    return this.actividades()
+    return base
       .filter((a) => termino === '' || a.titulo.toLocaleLowerCase('es').includes(termino))
       .filter((a) => estado === 'todas' || a.estado === estado)
       .filter((a) => prioridad === 'todas' || a.prioridad === prioridad)

@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { Actividad, Prioridad } from '../../modelos/actividad';
+import { Actividad, EstadoActividad, Prioridad } from '../../modelos/actividad';
 
 interface ActividadRemota {
   id: number;
@@ -9,6 +9,8 @@ interface ActividadRemota {
   description: string | null;
   priority_level: number;
   is_done: boolean;
+  is_featured?: boolean;
+  status?: EstadoActividad;
   created_at: string;
 }
 
@@ -17,10 +19,17 @@ export interface DatosActividadRemota {
   descripcion: string;
   prioridad: Prioridad;
   completada: boolean;
+  creadaEn?: string;
+  destacada?: boolean;
+  estado?: EstadoActividad;
 }
 
 const PRIORIDADES: Record<number, Prioridad> = { 1: 'baja', 2: 'media', 3: 'alta' };
 const NIVELES: Record<Prioridad, number> = { baja: 1, media: 2, alta: 3 };
+
+function esEstadoActividad(valor: unknown): valor is EstadoActividad {
+  return valor === 'pendiente' || valor === 'en_progreso' || valor === 'completada';
+}
 
 export function esActividadRemota(valor: unknown): valor is ActividadRemota {
   if (typeof valor !== 'object' || valor === null) {
@@ -34,6 +43,7 @@ export function esActividadRemota(valor: unknown): valor is ActividadRemota {
     typeof v.task_title === 'string' &&
     typeof v.priority_level === 'number' &&
     typeof v.is_done === 'boolean' &&
+    (v.status === undefined || esEstadoActividad(v.status)) &&
     typeof v.created_at === 'string'
   );
 }
@@ -44,9 +54,9 @@ export function aActividad(remota: ActividadRemota): Actividad {
     titulo: remota.task_title,
     descripcion: remota.description ?? '',
     prioridad: PRIORIDADES[remota.priority_level] ?? 'media',
-    estado: remota.is_done ? 'completada' : 'pendiente',
+    estado: remota.status ?? (remota.is_done ? 'completada' : 'pendiente'),
     creadaEn: remota.created_at.slice(0, 10),
-    destacada: false,
+    destacada: remota.is_featured ?? false,
   };
 }
 
@@ -60,7 +70,11 @@ function aCuerpoRemoto(datos: DatosActividadRemota): Record<string, unknown> {
     description: datos.descripcion === '' ? null : datos.descripcion,
     priority_level: NIVELES[datos.prioridad],
     is_done: datos.completada,
-    created_at: new Date().toISOString(),
+    is_featured: datos.destacada ?? false,
+    status: datos.estado ?? (datos.completada ? 'completada' : 'pendiente'),
+    created_at: datos.creadaEn
+      ? `${datos.creadaEn}T00:00:00.000Z`
+      : new Date().toISOString(),
   };
 }
 

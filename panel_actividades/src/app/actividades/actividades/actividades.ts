@@ -46,7 +46,7 @@ export class ActividadesService {
         retry({ count: 2, delay: (_, intento) => timer(intento * 300) }),
         catchError((e: unknown) => {
           this.error.set(mensajeDe(e));
-          return of<Actividad[]>([]);
+          return of(this.lista());
         }),
         finalize(() => this.cargando.set(false)),
       )
@@ -77,7 +77,14 @@ export class ActividadesService {
     this.lista.update((actual) => [...actual, provisional]);
 
     this.api
-      .crear({ titulo: limpio, descripcion: descripcion.trim(), prioridad, completada: false })
+      .crear({
+        titulo: limpio,
+        descripcion: descripcion.trim(),
+        prioridad,
+        completada: false,
+        destacada: false,
+        estado: 'pendiente',
+      })
       .pipe(catchError((e: unknown) => this.deshacer(provisional.id, e)))
       .subscribe((guardada) => {
         if (guardada) {
@@ -97,12 +104,16 @@ export class ActividadesService {
     }
 
     this.aplicarLocal(id, { titulo: limpio, descripcion: descripcion.trim(), prioridad });
-    this.enviar(id);
+    this.enviar(id, anterior);
     return true;
   }
 
   alternarDestacada(id: number): void {
-    this.aplicarLocal(id, { destacada: !this.buscarPorId(id)?.destacada });
+    const anterior = this.buscarPorId(id);
+    if (!anterior) return;
+
+    this.aplicarLocal(id, { destacada: !anterior.destacada });
+    this.enviar(id, anterior);
   }
 
   avanzarEstado(id: number): void {
@@ -110,7 +121,7 @@ export class ActividadesService {
     if (!actividad) return;
 
     this.aplicarLocal(id, { estado: this.siguienteEstado(actividad.estado) });
-    this.enviar(id);
+    this.enviar(id, actividad);
   }
 
   eliminar(id: number): void {
@@ -131,7 +142,7 @@ export class ActividadesService {
       .subscribe();
   }
 
-  private enviar(id: number): void {
+  private enviar(id: number, anterior: Actividad): void {
     const actividad = this.buscarPorId(id);
     if (!actividad) return;
 
@@ -141,10 +152,14 @@ export class ActividadesService {
         descripcion: actividad.descripcion,
         prioridad: actividad.prioridad,
         completada: actividad.estado === 'completada',
+        creadaEn: actividad.creadaEn,
+        destacada: actividad.destacada,
+        estado: actividad.estado,
       })
       .pipe(
         catchError((e: unknown) => {
           this.error.set(mensajeDe(e));
+          this.reemplazar(id, anterior);
           return of(null);
         }),
       )

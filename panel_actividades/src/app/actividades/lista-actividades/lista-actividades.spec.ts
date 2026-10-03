@@ -11,6 +11,7 @@ describe('ListaActividades', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(ListaActividades);
+    fixture.componentRef.setInput('actividades', []);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

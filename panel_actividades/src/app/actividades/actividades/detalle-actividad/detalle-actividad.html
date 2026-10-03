@@ -1,2 +1,22 @@
+@let actividadActual = actividad();
+
+<section class="detalle-actividad">
+  @if (invalida()) {
+    <h2>La dirección no es válida</h2>
+    <p>La ruta <strong>{{ id() }}</strong> no es válida para una actividad.</p>
+    <a routerLink="/actividades">Volver a las actividades</a>
+  } @else if (actividadActual) {
+    <h2>{{ actividadActual.titulo }}</h2>
+    <p><strong>Estado:</strong> {{ actividadActual.estado }}</p>
+    <p><strong>Prioridad:</strong> {{ actividadActual.prioridad }}</p>
+    <p><strong>Descripción:</strong> {{ actividadActual.descripcion || 'Sin descripción' }}</p>
+    <button type="button" (click)="eliminar()">Eliminar</button>
+    <a routerLink="/actividades">Volver a las actividades</a>
+  } @else {
+    <h2>Esta actividad ya no existe</h2>
+    <p>La actividad que buscas ya no existe o ha sido eliminada.</p>
+    <a routerLink="/actividades">Volver a las actividades</a>
+  }
+</section>
        
     

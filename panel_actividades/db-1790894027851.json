@@ -1,0 +1,12 @@
+{
+  "actividades": [
+    {
+      "task_title": "Preparar el informe 2",
+      "description": "prueba",
+      "priority_level": 2,
+      "is_done": true,
+      "created_at": "2026-10-01T21:24:24.630Z",
+      "id": 1
+    }
+  ]
+}
